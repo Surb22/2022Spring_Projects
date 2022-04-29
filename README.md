@@ -9,6 +9,12 @@
 1) Each square in the grid will be assigned either a 0 or a positive integer or a negative integer. The entire board will just contain one zero, and a minimum of three negative integers
 2) The score calculation will be done by multiplying all the numbers present in the captured squares. The player who has the maximum score at the end wins the game
 
+<p align="center">
+  <img width="460" height="500" src="https://user-images.githubusercontent.com/77983487/165886550-6b88c7c5-78bf-4e62-89d9-b5f312493844.gif">
+</p>
+
+
+
 ### Game Code:
 #### Player1: 
 AI chooses move based on MinMax Algorithm
