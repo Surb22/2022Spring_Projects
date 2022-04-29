@@ -300,3 +300,282 @@ class Board:
             self.canvas.delete("all")
             self.play_again()
             self.reset_board = False
+
+    def get_all_valid_moves(self):
+        openVectors = deque()
+        row_moves = np.argwhere(self.row_status == 0).tolist()
+        col_moves = np.argwhere(self.col_status == 0).tolist()
+        for moves in row_moves:
+            moves.append("row")
+            openVectors.append((moves[0], moves[1], "row"))
+
+        for moves in col_moves:
+            moves.append("col")
+            openVectors.append((moves[0], moves[1], "col"))
+        return openVectors
+
+        # def click(self, event):
+        return event
+        # move_list = []
+        # self.mark_move(event, move_list)
+        # if not self.player1_turn:
+        #     event,move_list = self.get_move_ai()
+        #     self.mark_move(event, move_list)
+
+    def update_board(self, type, logical_position):
+        r = logical_position[0]
+        c = logical_position[1]
+        val = 1
+        if c < (number_of_dots - 1) and r < (number_of_dots - 1):
+            self.board_status[c][r] += val
+            if self.board_status[c][r] == 4:
+                score_formed = self.board_status_score[c][r]
+                self.score_list.remove(score_formed)
+            if self.board_status[c][r] == 4 and self.player1_turn:
+                self.board_status[c][r] = -4
+        if type == 'row':
+            self.row_status[c][r] = 1
+            if c >= 1:
+                self.board_status[c - 1][r] += val
+                if self.board_status[c - 1][r] == 4:
+                    score_formed = self.board_status_score[c - 1][r]
+                    self.score_list.remove(score_formed)
+                if self.board_status[c - 1][r] == 4 and self.player1_turn:
+                    self.board_status[c - 1][r] = -4
+        if type == 'col':
+            self.col_status[c][r] = 1
+
+            if r >= 1:
+                self.board_status[c][r - 1] += val
+                if self.board_status[c][r - 1] == 4:
+                    score_formed = self.board_status_score[c][r - 1]
+                    self.score_list.remove(score_formed)
+                if self.board_status[c][r - 1] == 4 and self.player1_turn:
+                    self.board_status[c][r - 1] = -4
+
+    def evaluationFunction(self):
+        player1_score, player2_score = self.aiplayer.score_track_ai()
+        h = player1_score - player2_score
+        return h
+
+    def mini_max(self, moves, depth, max_min):
+        if max_min is True:
+            bestMove = (-100000000000, None)
+        else:
+            bestMove = (100000000000, None)
+        if depth == 0 or len(moves) == 0:
+            h = self.evaluationFunction()
+            return (h, None)
+        for i in range(0, len(moves)):
+            move = moves.pop()
+            stateCopy = deepcopy(self.aiplayer)
+            all_moves_Copy = deepcopy(moves)
+            stateCopy.update_board_ai(move[2], [move[1], move[0]])
+            moves.appendleft(move)
+            h = self.evaluationFunction()
+            if max_min is True:
+                if h >= self.beta:
+                    return (h, move)
+                else:
+                    self.alpha = max(self.alpha, h)
+            else:
+                if h <= self.alpha:
+                    return (h, move)
+                else:
+                    self.beta = min(self.beta, h)
+            nextMove = self.mini_max(all_moves_Copy, depth - 1, not max_min)
+
+            if max_min is True:
+                # At a max level, we seek scores higher than the current max
+                if nextMove[0] > bestMove[0]:
+                    bestMove = (nextMove[0], move)
+            else:
+                # At a min level, we seek scores lower than the current max
+                if nextMove[0] < bestMove[0]:
+                    bestMove = (nextMove[0], move)
+        if bestMove[1] is not None:
+            return bestMove
+        else:
+            return self.is_gameover()
+
+    def get_move_ai(self):
+        openVectors = self.get_all_valid_moves()
+        best_move = self.mini_max(openVectors, 30, True)
+        print("best move for AI", best_move)
+        type, move = best_move[1][2], [best_move[1][1], best_move[1][0]]
+        move_list = []
+        move_list.append(move)
+        move_list.append(type)
+        event = []
+        return event, move_list
+
+    def fill_three_side_box(self, score_list):
+        player1_score, player2_score = self.score_track()
+        score = score_list
+        # score list contains score of all the boxes which can be formed in next turn
+        if player2_score >= 1 and max(score) > 0:
+            selected_score = max(score)
+        elif player2_score < 0 and min(score) < 0:
+            selected_score = min(score)
+        elif player1_score < 0 and player2_score < 0 and (0 in score):
+            selected_score = 0
+        else:
+            type = ''
+            picked_position = []
+            return type, picked_position
+        zero_score_position = np.argwhere(self.board_status_score == 0)
+        max_score_position = np.argwhere(self.board_status_score == selected_score)
+        check_zero = ((max_score_position[0][0], max_score_position[0][1]))
+        if selected_score != 0 and ((check_zero in self.zero_position_row) or \
+                                    (check_zero in self.zero_position_col)) \
+                and self.board_status[zero_score_position[0][0], zero_score_position[0][1]] == 3:
+            if len(score) > 1:
+                score.remove(selected_score)
+                return self.fill_three_side_box(score)
+            else:
+                type = ''
+                picked_position = []
+                return type, picked_position
+
+        if not (self.is_grid_occupied((max_score_position[0][1], max_score_position[0][0]), "row")):
+            type = "row"
+            picked_position = (max_score_position[0][1], max_score_position[0][0])
+            return type, picked_position
+        elif not (self.is_grid_occupied((max_score_position[0][1], max_score_position[0][0] + 1), "row")):
+            type = "row"
+            picked_position = (max_score_position[0][1], max_score_position[0][0] + 1)
+            return type, picked_position
+        elif not (self.is_grid_occupied((max_score_position[0][1], max_score_position[0][0]), "col")):
+            type = "col"
+            picked_position = (max_score_position[0][1], max_score_position[0][0])
+            return type, picked_position
+        elif not (self.is_grid_occupied((max_score_position[0][1] + 1, max_score_position[0][0]), "col")):
+            type = "col"
+            picked_position = (max_score_position[0][1] + 1, max_score_position[0][0])
+            return type, picked_position
+        else:
+            type = ''
+            picked_position = []
+            return type, picked_position
+
+    def max_score_move(self, try_score):
+        player1_score, player2_score = self.score_track()
+        negative_present = False
+        positive_present = False
+        zero_present = False
+        for value in try_score:
+            if value < 0:
+                negative_present = True
+            if value > 0:
+                positive_present = True
+            if value == 0:
+                zero_present = True
+        if player2_score >= 1 and positive_present:
+            max_score = max(try_score)
+        elif player2_score < 0 and negative_present:
+            max_score = min(try_score)
+        elif player2_score < 0 and player1_score < 0 and zero_present:
+            max_score = 0
+        else:
+            type = ''
+            picked_position = []
+            return type, picked_position
+        max_score_position = np.argwhere(self.board_status_score == max_score)
+        possible_choices_row = []
+        possible_choices_col = []
+        row_position1 = self.is_grid_occupied((max_score_position[0][1], max_score_position[0][0]), "row")
+        row_position2 = self.is_grid_occupied((max_score_position[0][1], max_score_position[0][0] + 1), "row")
+        col_position1 = self.is_grid_occupied((max_score_position[0][1], max_score_position[0][0]), "col")
+        col_position2 = self.is_grid_occupied((max_score_position[0][1] + 1, max_score_position[0][0]), "col")
+        if not row_position1:
+            possible_choices_row.append((max_score_position[0][1], max_score_position[0][0]))
+        if not row_position2:
+            possible_choices_row.append((max_score_position[0][1], max_score_position[0][0] + 1))
+        if not col_position1:
+            possible_choices_col.append((max_score_position[0][1], max_score_position[0][0]))
+        if not col_position2:
+            possible_choices_col.append((max_score_position[0][1] + 1, max_score_position[0][0]))
+        remove_list_row = []
+        remove_list_col = []
+        zero_score_position = np.argwhere(self.board_status_score == 0)
+        if (player2_score > 0 or player2_score < 0) and self.board_status[
+            zero_score_position[0][0], zero_score_position[0][1]] == 3:
+            for value in possible_choices_row:
+                if value in self.zero_position_row:
+                    remove_list_row.append(value)
+                    possible_choices_row.remove(value)
+            for value in possible_choices_col:
+                if value in self.zero_position_col:
+                    remove_list_col.append(value)
+                    possible_choices_col.remove(value)
+        if len(possible_choices_row) == 1 and len(possible_choices_col) == 2 \
+                or (len(possible_choices_row) == 2 and len(possible_choices_col) == 1) \
+                or (len(possible_choices_row) == 2 and len(possible_choices_col) == 2):
+            type = random.choice(["row", "col"])
+            if type == "row":
+                picked_position = random.choice(possible_choices_row)
+            elif type == "col":
+                picked_position = random.choice(possible_choices_col)
+            return type, picked_position
+        elif len(try_score) > 1:
+            try_score.remove(max_score)
+            return self.max_score_move(try_score)
+        else:
+            type = ''
+            move = []
+            return type, move
+
+    def valid_move(self):
+        score = random.choice(self.score_list)
+        score_position = np.argwhere(self.board_status_score == score)
+        if not self.is_grid_occupied((score_position[0][1], score_position[0][0]), "row"):
+            type = "row"
+            position = (score_position[0][1], score_position[0][0])
+            return type, position
+        if not self.is_grid_occupied((score_position[0][1], score_position[0][0] + 1), "row"):
+            type = "row"
+            position = (score_position[0][1], score_position[0][0] + 1)
+            return type, position
+        if not self.is_grid_occupied((score_position[0][1], score_position[0][0]), "col"):
+            type = "col"
+            position = (score_position[0][1], score_position[0][0])
+            return type, position
+        if not self.is_grid_occupied((score_position[0][1] + 1, score_position[0][0]), "col"):
+            type = "col"
+            position = (score_position[0][1] + 1, score_position[0][0])
+            return type, position
+
+    def generate_move_ai_strategy(self):
+        if len(self.score_list) != 0:
+            move = []
+            possibility_1 = np.argwhere(self.board_status == 3)
+            if len(possibility_1) > 0:
+                score = []
+                list_of_possible_score = possibility_1
+                for value in list_of_possible_score:
+                    score.append(self.board_status_score[value[0], value[1]])
+                type, move = self.fill_three_side_box(score)
+            if len(move) == 0:
+                try_score_list = self.score_list.copy()
+                type, move = self.max_score_move(try_score_list)
+            if len(move) == 0:
+                random_move = self.get_all_valid_moves()
+                random_choice = random.choice(random_move)
+                return random_choice[2], (random_choice[1], random_choice[0])
+
+            return type, move
+
+    def get_move(self):
+        if len(self.score_list) == 0:
+            self.display_gameover()
+        else:
+            type, move = self.generate_move_ai_strategy()
+            move_list = []
+            move_list.append(move)
+            move_list.append(type)
+            event = []
+            self.mark_move(event, move_list)
+
+board_instance = Board()
+
+board_instance.mainloop()
