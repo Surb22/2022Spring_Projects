@@ -36,7 +36,10 @@ class Board:
     def __init__(self):
         self.window = Tk()
         self.window.title('Dots_and_Boxes')
-        self.canvas = Canvas(self.window, width=size_of_board, height=size_of_board)
+        self.canvas = Canvas(self.window, width=size_of_board*1.5, height=size_of_board*1.5)
+        self.btn = Button(self.window , text='Click here to start the game', width=30,
+                     height=3, bd='5', background = "red",command = self.click, font="cmr 15 bold")
+        self.btn.place(x=size_of_board + 200, y=size_of_board - 550)
         self.canvas.pack()
         self.list_board = []
         self.score_list = []
@@ -45,8 +48,9 @@ class Board:
         self.all_valid_moves = []
         self.aiplayer = playerAI()
         #self.randomNumbers = [3, -3, 4, 15, 0, 8, -6, 2, -5]
-        self.randomNumbers = [3, -3, 4, 15, 0, 8, -6, 2, -5,9,10,-6,-4,-4,-9, 11, -12, 12, -2, 17, 22, 13, 14,15,-1]
-        self.window.bind('<Button-1>', self.click)
+        self.randomNumbers = [3, -3, 4, 5, 0, 8, -6, 2, -5,9,10,-6,-4,-4,-9, 11, 1, 6, -2, 7, -8, -9, -10,-1,-1]
+
+        #self.window.bind('<Button-1>', self.click)
         self.player1_starts = True
         self.refresh_board()
         self.play_again()
@@ -69,8 +73,8 @@ class Board:
         self.score_player2_text = []
         self.already_marked_boxes = []
         self.display_turn_text()
-        self.alpha = -100000
-        self.beta = 100000
+        self.alpha = -100000000000
+        self.beta = 100000000000
         self.zero_position_row = []
         self.zero_position_col = []
         position_zero = np.argwhere(self.board_status == 0)
@@ -82,14 +86,18 @@ class Board:
         self.score_list = list(itertools.chain(*self.board_status_score.tolist()))
         #self.start_game()
 
-    def click(self,event):
+    def click(self):
         self.start_game()
 
     def start_game(self):
         all_moves = self.get_all_valid_moves()
         while(len(all_moves)) > 0:
             if self.player1_turn:
-                type, move = self.generate_move_ai_strategy()
+                move_check = self.generate_move_ai_strategy()
+                if move_check is None:
+                    break
+                else:
+                    type, move = move_check[0], move_check[1]
                 move_list = []
                 move_list.append(move)
                 move_list.append(type)
@@ -100,8 +108,8 @@ class Board:
                 event, move_list = self.get_move_ai()
                 self.mark_move(event, move_list)
 
-
     def mainloop(self):
+        self.window.state("zoomed")
         self.window.mainloop()
 
     def is_grid_occupied(self, logical_position, type):
@@ -204,17 +212,20 @@ class Board:
             text = 'Its a tie'
             color = 'gray'
 
-        self.canvas.delete("all")
-        self.canvas.create_text(size_of_board / 2, size_of_board / 3, font="cmr 60 bold", fill=color, text=text)
+        self.canvas.delete(self.turntext_handle)
+        self.canvas.delete(self.score_player1_text)
+        self.canvas.delete(self.score_player2_text)
+        self.btn.destroy()
+        self.canvas.create_text(size_of_board*1.2 , size_of_board / 3, font="cmr 30 bold", fill=color, text=text)
 
         score_text = 'Scores \n'
-        self.canvas.create_text(size_of_board / 2, 5 * size_of_board / 8, font="cmr 40 bold", fill=Green_color,
+        self.canvas.create_text(size_of_board*1.2, 5 * size_of_board / 8, font="cmr 40 bold", fill=Green_color,
                                 text=score_text)
 
         score_text = 'Player 1 : ' + str(player1_weighted_score) + '\n'
         score_text += 'Player 2 : ' + str(player2_weighted_score) + '\n'
         # score_text += 'Tie                    : ' + str(self.tie_score)
-        self.canvas.create_text(size_of_board / 2, 3 * size_of_board / 4, font="cmr 30 bold", fill=Green_color,
+        self.canvas.create_text(size_of_board*1.2, 3 * size_of_board / 4, font="cmr 30 bold", fill=Green_color,
                                 text=score_text)
         self.reset_board = True
 
@@ -355,7 +366,7 @@ class Board:
 
     def evaluationFunction(self):
         player1_score, player2_score = self.aiplayer.score_track_ai()
-        h = player1_score - player2_score
+        h = player2_score - player1_score
         return h
 
     def mini_max(self, moves, depth, max_min):
@@ -370,7 +381,7 @@ class Board:
             move = moves.pop()
             stateCopy = deepcopy(self.aiplayer)
             all_moves_Copy = deepcopy(moves)
-            stateCopy.update_board_ai(move[2], [move[1], move[0]])
+            stateCopy.update_board_ai(move[2], [move[1], move[0]],max_min)
             moves.appendleft(move)
             h = self.evaluationFunction()
             if max_min is True:
@@ -396,13 +407,16 @@ class Board:
         if bestMove[1] is not None:
             return bestMove
         else:
-            return self.is_gameover()
+            self.display_gameover()
 
     def get_move_ai(self):
         openVectors = self.get_all_valid_moves()
-        best_move = self.mini_max(openVectors, 30, True)
-        print("best move for AI", best_move)
-        type, move = best_move[1][2], [best_move[1][1], best_move[1][0]]
+        best_move = self.mini_max(openVectors, 55, True)
+        print("best move for AI with minimax", best_move)
+        if best_move[1] is not None:
+            type, move = best_move[1][2], [best_move[1][1], best_move[1][0]]
+        else:
+            type, move = "row", [0,0]
         move_list = []
         move_list.append(move)
         move_list.append(type)
@@ -554,16 +568,24 @@ class Board:
                 list_of_possible_score = possibility_1
                 for value in list_of_possible_score:
                     score.append(self.board_status_score[value[0], value[1]])
-                type, move = self.fill_three_side_box(score)
+                fill3_move = self.fill_three_side_box(score)
+                if len(fill3_move) != 0:
+                 type, move = fill3_move[0], fill3_move[1]
+                else:
+                    random_move = self.get_all_valid_moves()
+                    random_choice = random.choice(random_move)
+                    return random_choice[2], (random_choice[1], random_choice[0])
             if len(move) == 0:
                 try_score_list = self.score_list.copy()
-                type, move = self.max_score_move(try_score_list)
-            if len(move) == 0:
-                random_move = self.get_all_valid_moves()
-                random_choice = random.choice(random_move)
-                return random_choice[2], (random_choice[1], random_choice[0])
-
+                max_score_move = self.max_score_move(try_score_list)
+                if len(max_score_move[1]) != 0:
+                    type, move = max_score_move[0], max_score_move[1]
+                else:
+                    random_move = self.get_all_valid_moves()
+                    random_choice = random.choice(random_move)
+                    return random_choice[2], (random_choice[1], random_choice[0])
             return type, move
+
 
     def get_move(self):
         if len(self.score_list) == 0:

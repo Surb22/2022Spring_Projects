@@ -36,7 +36,7 @@ class Board:
         self.all_valid_moves = []
         self.aiplayer = playerAI()
         #self.randomNumbers = [3, -3, 4, 15, 0, 8, -6, 2, -5]
-        self.randomNumbers = [3, -3, 4, 15, 0, 8, -6, 2, -5,9,10,-6,-4,-4,-9, 11, -12, 12, -2, 17, 22, 13, 14,15,-1]
+        self.randomNumbers = [3, -3, 4, 5, 0, 8, -6, 2, -5,9,10,-6,-4,-4,-9, 11, 1, 6, -2, 7, -8, -9, -10,-1,-1]
         self.window.bind('<Button-1>', self.click)
         self.player1_starts = True
         self.refresh_board()
@@ -59,8 +59,8 @@ class Board:
         self.score_player2_text = []
         self.already_marked_boxes = []
         self.display_turn_text()
-        self.alpha = -1000000000
-        self.beta = 10000000000
+        self.alpha = -100000000000
+        self.beta = 100000000000
 
     def mainloop(self):
         self.window.mainloop()
@@ -96,7 +96,6 @@ class Board:
 
     def mark_box(self):
         boxes_p1 = np.argwhere(self.board_status == -4)
-
         for box in boxes_p1:
             if list(box) not in self.already_marked_boxes and list(box) != []:
                 self.flag = 10
@@ -320,7 +319,7 @@ class Board:
             move = moves.pop()
             stateCopy = deepcopy(self.aiplayer)
             all_moves_Copy = deepcopy(moves)
-            stateCopy.update_board_ai(move[2], [move[1], move[0]])
+            stateCopy.update_board_ai(move[2], [move[1], move[0]],max_min)
             moves.appendleft(move)
             h = self.evaluationFunction()
             if max_min is True:
@@ -345,14 +344,15 @@ class Board:
                     bestMove = (nextMove[0], move)
         if bestMove[1] is not None:
             return bestMove
-        else:
-            return self.is_gameover()
 
     def get_move_ai(self):
         openVectors = self.get_all_valid_moves()
         best_move = self.mini_max(openVectors, 30, True)
         print("best move for AI", best_move)
-        type, move = best_move[1][2], [best_move[1][1], best_move[1][0]]
+        if best_move[1] is not None:
+            type, move = best_move[1][2], [best_move[1][1], best_move[1][0]]
+        else:
+            type, move = "row", [0, 0]
         move_list = []
         move_list.append(move)
         move_list.append(type)
