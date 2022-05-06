@@ -42,6 +42,26 @@ Player 2 is AI player implemented with some predefined strategies
 Player 1 is human player
 Player 2 is AI player implemented using minimax algorithm
 
+### Performance measurement:
+
+We had multiple matches between the AI and human player to test the performance of our code. The results were as follows:
+
+#### AI player VS Another AI player:
+ - 	We had 10 matches between both the players on a 6X6 grid
+ -	Player 1 which was implemented using minimax won 6 games
+ -	Player 2 which was implemented using some strategies won 4 games
+
+#### Human player VS AI player implemented with some predefined strategies:
+-	We had 10 matches between both the players on a 4X4 grid
+-	Player 1 which was human and was choosing random moves won 4 games
+-	Player 2 which was implemented using some strategies won 6 games
+
+#### Human player VS AI player implemented using minimax
+-	We had 10 matches between both the players on a 6X6 grid
+-	Player 1 which was human and was making most of the moves strategically won 3 games
+-	Player 2 which was implemented using minimax won 7 games
+
+
 ### Big-O Analysis:
 Big-O for the heuristic function in the MinMax algorithm: O(n), where n is the number of boxes in the game board.
 
@@ -55,6 +75,10 @@ While implementing minimax algorithm, the major challenge that we faced was we w
 We got the this exception: TypeError: cannot pickle '_tkinter.tkapp' object ( [reference](https://stackoverflow.com/questions/50568880/cant-pickle-tkinter-tkapp-objects-error-when-trying-to-create-multiple-instanc) )
 To overcome this problem, we had to create a separate file called utility.py with all the tkinter objects excluded and duplicate functions included(functions from the main.py file) to keep a track of the board and play the game using minimax algorithm. 
 This is the reason why minimax player fails to win the game at times.
+
+#### Summary of how we shared the work:
+We started our project by first discussing the approach and data structure for our game. After that we started working on the code. We both equally worked on all parts of the project. Surbhi majorly took care of the AI player implemented with strategies and Shubhda took care of the AI player implemented using minimax.
+
 
 ### Refrences:
 https://github.com/aqeelanwar/Dots-and-Boxes
