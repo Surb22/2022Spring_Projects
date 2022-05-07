@@ -167,7 +167,10 @@ class Dots_and_Boxes():
             end_y = start_y + distance_between_dots
             start_x = distance_between_dots / 2 + logical_position[0] * distance_between_dots
             end_x = start_x
-        color = player1_color
+        if self.player1_turn:
+            color = player1_color
+        else:
+            color = player2_color
         self.canvas.create_line(start_x, start_y, end_x, end_y, fill=color, width=edge_width)
 
 
@@ -270,6 +273,13 @@ class Dots_and_Boxes():
 
 
     def fill_three_side_box(self, score_list):
+        """
+        This function searches if the board has a box where three edges are occupied and returns
+        the position of the fourth edge else returns a null value.
+        :param score_list: list of weightages associated with boxes on the board
+        :return: a string specifying : row or col and a tuple containing indices of a 2D array
+        """
+
         player1_score, player2_score = self.score_track()
         score = score_list
          # score list contains score of all the boxes which can be formed in next turn
@@ -320,6 +330,12 @@ class Dots_and_Boxes():
 
 
     def max_score_move(self,try_score):
+        """
+        This function checks for the weightage of all unoccupied boxes on th board and selects the box
+        which maximizes the score of the player and returns the position of one of the edges of the box.
+        :param try_score: list of weightage associated with unoccupied boxes
+        :return: a string specifying : row or col and a tuple containing indices of a 2D array
+        """
         player1_score, player2_score = self.score_track()
         negative_present= False
         positive_present = False
@@ -387,6 +403,10 @@ class Dots_and_Boxes():
 
 
     def valid_move(self):
+        """
+        This function generates a random move.
+        :return: a string specifying : row or col and a tuple containing indices of a 2D array
+        """
         score = random.choice(self.score_list)
         score_position = np.argwhere(self.board_status_score == score)
         if not self.is_grid_occupied((score_position[0][1], score_position[0][0]), "row"):
@@ -408,6 +428,10 @@ class Dots_and_Boxes():
 
 
     def generate_move_ai(self):
+        """
+        Generates a move for the player with strategy.
+        :return: a string specifying : row or col and a tuple containing indices of a 2D array
+        """
         if len(self.score_list) != 0:
             move = []
             possibility_1 = np.argwhere(self.board_status == 3)
