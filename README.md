@@ -69,6 +69,10 @@ Each element in the numpy array represents a box initially depicted with a 0. Th
 
 Time taken to search the occupied boxes depends on the total number of boxes on the board. Hence the Big-O for MinMax heuristic function is O(n) where n is the number of boxes.  
 
+### Profiler for main.py:
+![image](https://user-images.githubusercontent.com/77983689/167230594-453a2144-f059-4f1f-b8fb-db51e3e2e1f2.png)
+
+
 ### Challenges:
 While implementing minimax algorithm, the major challenge that we faced was we were not able to create a deepcopy of the class which had objects belonging to tkinter library. (GUI library)  
 We got the this exception: TypeError: cannot pickle '_tkinter.tkapp' object ( [reference](https://stackoverflow.com/questions/50568880/cant-pickle-tkinter-tkapp-objects-error-when-trying-to-create-multiple-instanc) )  
