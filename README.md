@@ -42,7 +42,7 @@ Player 2 is AI player implemented with some predefined strategies
 Player 1 is human player  
 Player 2 is AI player implemented using minimax algorithm  
 
-### Performance measurement:
+### Performance measurement of the game:
 
 We had multiple matches between the AI and human player to test the performance of our code. The results were as follows:
 
@@ -60,7 +60,6 @@ We had multiple matches between the AI and human player to test the performance 
 -	We had 10 matches between both the players on a 6X6 grid  
 -	Player 1 which was human and was making most of the moves strategically won 3 games  
 -	Player 2 which was implemented using minimax won 7 games  
-
 
 ### Big-O Analysis:
 Big-O for the heuristic function in the MinMax algorithm: O(n), where n is the number of boxes in the game board.  
