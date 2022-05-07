@@ -49,21 +49,16 @@ class Board:
         self.aiplayer = playerAI()
         #self.randomNumbers = [3, -3, 4, 15, 0, 8, -6, 2, -5]
         self.randomNumbers = [3, -3, 4, 5, 0, 8, -6, 2, -5,9,10,-6,-4,-4,-9, 11, 1, 6, -2, 7, -8, -9, -10,-1,-1]
-
-        #self.window.bind('<Button-1>', self.click)
         self.player1_starts = True
         self.refresh_board()
         self.play_again()
-        #self.window.bind('<Return>', self.start_game())
-        #self.start_game()
+
 
     def play_again(self):
         self.refresh_board()
         self.board_status = np.zeros(shape=(number_of_dots - 1, number_of_dots - 1))
-        #self.board_status_score = np.array(self.randomNumbers).reshape(number_of_dots - 1, number_of_dots - 1).T
         self.row_status = np.zeros(shape=(number_of_dots, number_of_dots - 1))
         self.col_status = np.zeros(shape=(number_of_dots - 1, number_of_dots))
-        # Input from user in form of clicks
         self.player1_starts = not self.player1_starts
         self.player1_turn = not self.player1_starts
         self.reset_board = False
@@ -84,12 +79,20 @@ class Board:
         self.zero_position_col.append((position_zero[0][1] + 1, position_zero[0][0]))
         self.board_status_score = np.array(self.randomNumbers).reshape(number_of_dots - 1, number_of_dots - 1).T
         self.score_list = list(itertools.chain(*self.board_status_score.tolist()))
-        #self.start_game()
+
 
     def click(self):
+        """
+        Called on click of button. This function starts the game.
+        :return:
+        """
         self.start_game()
 
     def start_game(self):
+        """
+        This function is called to start the game.
+        :return:
+        """
         all_moves = self.get_all_valid_moves()
         while(len(all_moves)) > 0:
             if self.player1_turn:
@@ -109,10 +112,20 @@ class Board:
                 self.mark_move(event, move_list)
 
     def mainloop(self):
+        """
+        This function loads the tkinter canvas
+        :return:
+        """
         self.window.state("zoomed")
         self.window.mainloop()
 
     def is_grid_occupied(self, logical_position, type):
+        """
+        This function checks if the edge is occupied or not
+        :param logical_position: move
+        :param type: string specifying row or col
+        :return: occupied is returned as false if the edge is not occupied and vice versa
+        """
         r = logical_position[0]
         c = logical_position[1]
         occupied = True
@@ -142,6 +155,10 @@ class Board:
         return logical_position, type
 
     def mark_box(self):
+        """
+        This function is used to mark an occupied box with the color of the player who has occupied the box
+        :return:
+        """
         boxes_p1 = np.argwhere(self.board_status == -4)
 
         for box in boxes_p1:
@@ -168,6 +185,12 @@ class Board:
     # ------------------------------------------------------------------
 
     def make_edge(self, type, logical_position):
+        """
+        This function is used to make a move and mark the edge on the canvas UI
+        :param type: row or col as string
+        :param logical_position: move made by the player
+        :return:
+        """
         if type == 'row':
             start_x = distance_between_dots / 2 + logical_position[0] * distance_between_dots
             end_x = start_x + distance_between_dots
@@ -186,6 +209,10 @@ class Board:
         self.canvas.create_line(start_x, start_y, end_x, end_y, fill=color, width=edge_width)
 
     def score_track(self):
+        """
+        This function keeps track of the score after every move
+        :return: Returns the score of both the players at any given game state
+        """
         player1_score_positions = np.argwhere(self.board_status == -4)
         player1_weighted_score = 1
         if len(player1_score_positions) != 0:
@@ -313,6 +340,10 @@ class Board:
             self.reset_board = False
 
     def get_all_valid_moves(self):
+        """
+        Used to get all valid moves in a game
+        :return: returns all the valid moves as a deque.
+        """
         openVectors = deque()
         row_moves = np.argwhere(self.row_status == 0).tolist()
         col_moves = np.argwhere(self.col_status == 0).tolist()
@@ -325,15 +356,14 @@ class Board:
             openVectors.append((moves[0], moves[1], "col"))
         return openVectors
 
-        # def click(self, event):
-        return event
-        # move_list = []
-        # self.mark_move(event, move_list)
-        # if not self.player1_turn:
-        #     event,move_list = self.get_move_ai()
-        #     self.mark_move(event, move_list)
 
     def update_board(self, type, logical_position):
+        """
+        This function is used to update the board state after every move
+        :param type:
+        :param logical_position:
+        :return:
+        """
         r = logical_position[0]
         c = logical_position[1]
         val = 1
@@ -365,11 +395,22 @@ class Board:
                     self.board_status[c][r - 1] = -4
 
     def evaluationFunction(self):
+        """
+        This is the hueristic function used for evaluation in mini max
+        :return:
+        """
         player1_score, player2_score = self.aiplayer.score_track_ai()
         h = player2_score - player1_score
         return h
 
     def mini_max(self, moves, depth, max_min):
+        """
+        This is the mini max function which returns the best move
+        :param moves: All valid moves
+        :param depth: depth tree search
+        :param max_min: If True it depicts the minmax player's turn
+        :return: best move for minmax player
+        """
         if max_min is True:
             bestMove = (-100000000000, None)
         else:
@@ -410,6 +451,10 @@ class Board:
             self.display_gameover()
 
     def get_move_ai(self):
+        """
+        This function is used to return the best move for the player which is implemented using minimax algorithm
+        :return:
+        """
         openVectors = self.get_all_valid_moves()
         best_move = self.mini_max(openVectors, 55, True)
         print("best move for AI with minimax", best_move)
@@ -555,7 +600,7 @@ class Board:
     def valid_move(self):
         """
         This function generates a random move
-        :return: a string specifying : row or col and a tuple containing indices of a 2D array
+        :return: Returns type of move which is either row or col as a string  and a tuple containing indices of a 2D array
         """
         score = random.choice(self.score_list)
         score_position = np.argwhere(self.board_status_score == score)
@@ -577,6 +622,10 @@ class Board:
             return type, position
 
     def generate_move_ai_strategy(self):
+        """
+        This function generates moves for the AI player which is implemented using some predefined strategies
+        :return: Returns type of move which is either row or col as a string and a tuple containing indices of a 2D array
+        """
         if len(self.score_list) != 0:
             move = []
             possibility_1 = np.argwhere(self.board_status == 3)
@@ -603,17 +652,6 @@ class Board:
                     return random_choice[2], (random_choice[1], random_choice[0])
             return type, move
 
-
-    def get_move(self):
-        if len(self.score_list) == 0:
-            self.display_gameover()
-        else:
-            type, move = self.generate_move_ai_strategy()
-            move_list = []
-            move_list.append(move)
-            move_list.append(type)
-            event = []
-            self.mark_move(event, move_list)
 
 board_instance = Board()
 
